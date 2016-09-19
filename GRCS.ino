@@ -1,5 +1,5 @@
 /*
- *  GRCSv1
+ *  GRCSv2
  *  By: Joey Hines
  *  
  *  For use on an Arduino or compatiable device. Commands
@@ -10,19 +10,40 @@
  *  on the right motor at full power, you would send'
  *  the command "R100"
  *  
+ *  Currently only works with the Servo class, more
+ *  to be added in v3.
+ *  
+ *  Sensor support also comming, planned for v4.
+ *  
+ *  Change Log:
+ *  -Motor code rewrite
+ *    Adds modularity to code
+ *    Allows for adding new addtinal motors qucikly
+ *    Use GRCSv2_Generator.exe to add new motors quickly
+ *  
  */
 
 #include <Servo.h>
 
-//Drive Motor Pins
-const int rightMotor = 10;
-const int leftMotor = 9;
+//Structure for storing motor data
+struct Motor{
+  int pin;
+  int id;
+  bool inverse;
+  //To be implemented later for diffrent kinds of motor control
+  //int motorType
+  Servo servo;
+};
 
-//Servo Objects
-Servo right;
-Servo left;
+/*
+ * Format for motor array
+ * {pin, id, inverse}
+ * ,{,,,}
+*/
+Motor motors[] = {{10,'R',0},{9, 'L', 1}}; //...
+const int NUMBER_OF_MOTORS = 2;
 
-//Setup
+//MAIN PROGRAM BODY
 void setup() {
   //Begin Serial
   Serial.begin(9600);
@@ -33,80 +54,48 @@ void setup() {
 
 void loop() {
   //Int for storing the serial input
-  int input = 0;
+  int id = 0;
   
   //If data is received
   if (Serial.available() > 0) {
     
-      //Store first byte to input
-      input = Serial.read();
+      //Store the ID byte to input
+      id = Serial.read();
       //Echo it to serial for debugging
-      //Serial.write(input);
+      //Serial.write(serialInput);
 
-      //Set the motor to write based on control byte 'L' for left, 'R' for right
-      //The next byte is the speed (0 to 100, -100 for reverse full speed and 100 for foward full speed)
-      if (input == 'R') {       
-        int sp = Serial.parseInt();
-        setMotor(rightMotor, sp);
-        Serial.write(sp);
+      //Iterate through the motor array
+      for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+        //If the id matches one of the motors
+        if (motors[i].id == id) {
+          //Get the value to write to the motor
+          int value = Serial.parseInt();
+          //Check if the motor needs to be reversed
+          if (motors[i].inverse) {
+              value = -value;
+          }
+          //Convert from percentage to angle (0 to 180)
+          int angle = value * 0.9 + 90;
+          //If the value was not 0
+          if (value != 0) {
+            //Attach the motor
+            motors[i].servo.attach(motors[i].pin);
+            //Write the angle to he motor/servo
+            motors[i].servo.write(angle);    
+          }
+          else {
+            //Detach motor to remove unwated movement
+            motors[i].servo.detach();    
+          }      
+        }
       }
-      else if (input == 'L') {
-        int sp = Serial.parseInt();
-        setMotor(leftMotor, sp);
-        Serial.print(sp);
-      }
+      
   }
 
+  //Will be looked at for v4...
   //Serial Sent Test
   //sendSerialData('T', 42);
-
-  //If data needs to be sent
 }
 
-/* void setMotor(int pin, int sp)
- * Takes a value form -100 to 100  and sets the servo angle 0 to 180
- * The left motor is reversed 
- */
-void setMotor(int pin, int sp) {
-  int angle = sp * 0.9 + 90;
 
-  if (pin == rightMotor) {
-    //Add this line back in if the right motor needs to be inverted
-     //invertAngle(angle);
-    if (sp == 0) {
-      right.detach();
-    }
-    else {
-      right.attach(rightMotor);
-      right.write(angle);
-    }
-  }
-  else if (pin = leftMotor) {
-    //Remove this line if the left motor is not reversed
-    angle = invertAngle(angle);
-    if (sp == 0) {
-      left.detach();
-    }
-    else {
-      left.attach(leftMotor);
-      left.write(angle);
-    }
-  }
-}
-/* int invertAngle(int angle)
- * Used to invert the angle or the direction of motor spin
- */
-int invertAngle(int angle) {
-    angle = angle-90;
-    angle = -angle;
-    return angle + 90; 
-}
-
-/* void sendSerialData(char id, int data)
- * Writes to data to serial format is "CHAR_ID""INT_DATA"
- */
-void sendSerialData(char id, int data) {
-  Serial.write(id);
-  Serial.write(data);
-}
 
