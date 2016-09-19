@@ -1,61 +1,71 @@
 /*
- *  GRCSv3
- *  By: Joey Hines
+ *  GRCSv4
+ *  By: Joey Hines (joey.ahines@gmail.com)
+ *  
+ *  For use on an Arduino or compatible device. Commands
+ *  are recvived via Serial at a buad rate of 9600
  *
- *  For use on an Arduino or compatiable device. Commands
- *  are received via Serial at a buad rate of 9600
+ *  Commands have the format of first a ASCII charcter 
+ *  identifier and then a value. For example, 
+ *  if you want to turn on a device called right motor at full 
+ *  forward, you would send the command "R200". 
+ *  
+ *  Compatible with GRCv2+
+ *  
+ *  The following devices are supported:
+ *  -Adafruit Motor Controller Sheild
+ *  -Servos
+ *  -Relays
+ *  -PWM devices (ie Motor Controllers)
+ *  
  *
- *  Commands have the format of first a ASCII character 
- *  identified and then a value. For example, 
- *  if you want to turn on the right motor at full power, 
- *  you would send the command "R100". 
- *
- *  Currently only works with the Servo class, more
- *  to be added in v4.
- *
- *  Sensor support also coming, planned for v4.
+ *  Sensor support postponed to v5
  *
  *  Change Log:
- *  -Motors can be assigned remotely at start up and
- *  any time $ is received
- *    *Can be disabled on line  47 if pre-defined
- *      array should be used
- *    *Packet format
- *      $ | # of Motors | First Motor Pin | First Motor Id | First Motor Inverse State | ...
- *  -GRCVS_Gen is no longer needed, but can be used
- *    *Motor assignment is hard-coded on GRC v2, v3
- *     allows for dynamic assignment
- *  -The structure "Motor" is now defined in its 
- *  own .h file called "motorStruct.h"
- *    *This allows for the code for writing to the
- *      the motors to be moved back into its own
- *      function like v1
- *
+ *  +New devices added
+ *   -Adafruit Motor Controller Shield
+ *   -Relays
+ *   -PWM Motor Controller
+ *   -Any PWM controlled device
+ *  +motor structure renamed to device and new elements
+ *  added
+ *    -Since more than motors are not supported, the 
+ *      rename was done to avoid confusion
+ *    -New elements added for new devices
+ *  +Switch cases added for device specific code
+ * 
  */
 
 #include <Servo.h>
-#include "motorStruct.h"
+#include "deviceStruct.h"
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_MS_PWMServoDriver.h"
 
-//Pointer for creating dynamic motorArray
-Motor * motorArray;
-//Number of motors
-int numberOfMotors;
+//Pointer for creating dynamic deviceArray
+Device * deviceArray;
+
+//Motor Sheild Object
+Adafruit_MotorShield AFMS;
+
+//Tracking if a motorSheild motor is added
+bool firstMotorSheild = true;
+
+//Number of devices
+int numberOfDevices;
 //bool for tracking first time setup
 bool firstTimeSetup = true;
-
-
-
 
 //MAIN PROGRAM BODY
 void setup() {
   //Begin Serial
   Serial.begin(9600);
+  AFMS.begin();
   //Set timeout to 10 for faster int parsing
   Serial.setTimeout(10);
 
   //Boolean used to track if the motor reset flag has been sent
   bool recv = false;
-
 
   //While recv is false
   Serial.println("Waiting for connection...");
@@ -69,8 +79,8 @@ void setup() {
     }
    }
 
-  //Call setupMotorArray for first time setup
-  setupMotorArray();
+  //Call setupdeviceArray for first time setup
+  setupDeviceArray();
   
 
 }
@@ -83,36 +93,32 @@ void loop() {
   if (Serial.available() > 0) {
 
     //Store the ID byte to input
-    id = Serial.read();
+    id = getSerialData();
     //Echo it to serial for debugging
     //Serial.print(id);
     
     //if the reassign id was not sent
     if (id != '$') {
       //Iterate through the motor array
-      for (int i = 0; i < numberOfMotors; i++) {
+      for (int i = 0; i < numberOfDevices; i++) {
         //If the id matches one of the motors
-        if (motorArray[i].id == id) {
+        if (deviceArray[i].id == id) {
           //Get the value to write to the motor
-          int value = Serial.parseInt();
+          int value = getSerialData();
           //Echo it to serial for debugging
           //Serial.println(value);
-          writeToMotor(motorArray[i], value);
+          writeToMotor(deviceArray[i], value);
         }
       }
     }
     //If it was
     else {
-      //Call the setupMotorArray again
-      setupMotorArray();
+      //Call the setup deviceArray again
+      setupDeviceArray();
     }
 
 
   }
-
-  //Will be looked at for v4...
-  //Serial Sent Test
-  //sendSerialData('T', 42);
 }
 
 /* void writeToMotor(Motor motor, int value)
@@ -122,58 +128,171 @@ void loop() {
  */
 
 
-void writeToMotor(Motor motor, int value) {
-  if (motor.inverse) {
-    value = -value;
+void writeToMotor(Device device, int value) {
+  //Inverse value if the motor is inversed
+  if (device.inverse) {
+    value = -(value-100)+100;
   }
-  //Convert from percentage to angle (0 to 180)
-  int angle = value * 0.9 + 90;
-  //If the value was not 0
-  if (value != 0) {
-    //Attach the motor
-    motor.servo.attach(motor.pin);
-    //Write the angle to he motor/servo
-    motor.servo.write(angle);
-  }
-  else {
-    //Detach motor to prevent unwated movement
-    motor.servo.detach();
-  }
+  
+  int deviceValue;
+  
+  //Converts the GRCS value to the device specific value
+  switch(device.deviceType) {
+      case 0: //Case for Servo
+        deviceValue = value * 0.9;
+          if (value != 100) {
+            //Attach the motor
+            device.servo.attach(device.pin);
+            //Write the angle to he motor/servo
+            device.servo.write(deviceValue);
+          }
+          else {
+            //Detach motor to prevent unwanted movement
+            device.servo.detach();
+          }
+        break;
+      case 1: //Case for device controller shield
+        //Convert to a 0 to 255 scale
+        deviceValue = (value - 100) * 2.55;
+
+        //If device value is less than 0
+        if (deviceValue  < 0) {
+          device.motor->run(BACKWARD);
+          device.motor->setSpeed(-deviceValue);
+        }
+        //If it is greater than 0
+        else if (deviceValue > 0) {
+          device.motor->run(FORWARD);
+          device.motor->setSpeed(deviceValue);
+          
+        }
+        //If device value is 0
+        else {
+        device.motor->run(FORWARD);
+        device.motor->setSpeed(0);
+        }         
+        break;
+      case 2: //Relay case
+        //If value is 0
+        if (value != 100) {
+          digitalWrite(device.pin, HIGH);
+        }
+        //If it is not 0
+        else {
+          digitalWrite(device.pin, LOW);
+        }
+        break;
+      case 3: //Case for Motor Controller
+        //Convert to a 0 to 255 scale
+        deviceValue = (value - 100) * 2.55;
+
+        //If device values is less than 0
+        if (deviceValue  < 0) {
+          //Set motor to reverse
+          digitalWrite(device.value[0], HIGH);
+          digitalWrite(device.value[1], LOW);
+          analogWrite(device.pin, -deviceValue);
+          
+        }
+        //If device value is greater than 0
+        else if (deviceValue > 0) {
+          //Set motor to forward
+          digitalWrite(device.value[0], LOW);
+          digitalWrite(device.value[1], HIGH);
+          analogWrite(device.pin, deviceValue);
+        } 
+        else {
+          //Stop Motor
+          analogWrite(device.pin, 0);
+        }     
+   }
 }
-/* bool setupMotorArray()
- * Receives all motor info from the controller and the
+
+/* bool setupDeviceArray()
+ * Receives all device info from the controller and the
  * dynamically creates an array for storing all of it
  */
-bool setupMotorArray() {
+bool setupDeviceArray() {
   if (!firstTimeSetup) {
-    delete motorArray;
+    delete deviceArray;
   }
   //Wait to recv data
-  //Serial.println("Ready to Comply");
+  Serial.println("Ready to Comply");
 
-  //First value is the number of motors
-  //Store the number of motors
-  numberOfMotors = getSerialData();
+  //First value is the number of devices
+  //Store the number of devices
+  numberOfDevices = getSerialData();
 
-  //Create an array large enough to store all the motors
-  motorArray = new Motor[numberOfMotors];
+  //Creat an array large enough to store all the devices
+  deviceArray = new Device[numberOfDevices];
 
   //Print the number recv for debugging
-  //Serial.print("# of Motors: ");
-  //Serial.println(numberOfMotors);
+  Serial.print("# of devices: ");
+  Serial.println(numberOfDevices);
 
-  //For each motor, get the motor data and
-  //store it in the motorArray
-  for (int i = 0; i < numberOfMotors; i++) {
-    motorArray[i].id = getSerialData();
+  //For each device, get the device data and
+  //store it in the deviceArray
+  for (int i = 0; i < numberOfDevices; i++) {
+    deviceArray[i].id = getSerialData();
     Serial.print("ID: ");
-    Serial.println(motorArray[i].id);
-    motorArray[i].pin = getSerialData();
+    Serial.println(deviceArray[i].id);
+    
+    deviceArray[i].pin = getSerialData();
     Serial.print("PIN: ");
-    Serial.println(motorArray[i].pin);
-    motorArray[i].inverse = getSerialData();
+    Serial.println(deviceArray[i].pin);
+    
+    deviceArray[i].inverse = getSerialData();
     Serial.print("Inverse: ");
-    Serial.println(motorArray[i].inverse);
+    Serial.println(deviceArray[i].inverse);
+    
+    deviceArray[i].deviceType = getSerialData();
+    Serial.print("Device Type: ");
+    Serial.println(deviceArray[i].deviceType);
+
+    deviceArray[i].numberOfDeviceValues = getSerialData();
+    Serial.print("Number Of Device Values:");
+    Serial.println(deviceArray[i].numberOfDeviceValues);   
+
+    //If the device needs more values
+    if (deviceArray[i].numberOfDeviceValues != 0) {
+      //Create a array to store them in
+      deviceArray[i].value = new int[deviceArray[i].numberOfDeviceValues];
+
+      //Fill the array
+      for (int x = 0; x < deviceArray[i].numberOfDeviceValues; x++) {
+        deviceArray[i].value[x] = getSerialData();
+        Serial.print("Device Value: ");
+        Serial.println(deviceArray[i].value[x]);
+      }
+    }
+    
+    //Switch for individual device setup, more to be added
+    switch(deviceArray[i].deviceType) {
+      case 0:
+        break;
+      case 1: //Case for device controller shield
+       
+        if (firstMotorSheild == true) {
+          AFMS = Adafruit_MotorShield(); 
+          firstMotorSheild = false;
+        }
+        deviceArray[i].motor = AFMS.getMotor(deviceArray[i].pin);
+        deviceArray[i].motor->setSpeed(0);
+        deviceArray[i].motor->run(FORWARD);
+        deviceArray[i].motor->run(RELEASE);
+        break;
+      case 2: 
+        break;
+      case 3: 
+        pinMode(deviceArray[i].pin, OUTPUT);  
+        pinMode(deviceArray[i].value[0], OUTPUT);
+        pinMode(deviceArray[i].value[1], OUTPUT);       
+        break;
+      default:
+        Serial.println("Unknown type, assuming PWM servo."); 
+        deviceArray[i].deviceType = 0;
+    }
+  
   }
   Serial.println("Done.");
   firstTimeSetup = false;
@@ -181,33 +300,41 @@ bool setupMotorArray() {
   //Will be used for checking impartial setups in future 
   //versions
 
-  /*for (int i = 0; i < numberOfMotors; i++) {
-    Serial.println(motorArray[i].id);
-    Serial.println(motorArray[i].pin);
-    Serial.println(motorArray[i].inverse);
-  }*/
   return true;
 }
-/* int getSerialData()
- *  Gets the ASCII charcter from serial and returns its
- *  ASCII code value
- */
 
+/* int getSerialData()
+ *  Gets a packet from serial and returns its
+ *  ASCII code value contained within
+ */
 int getSerialData() {
+  //String for storing input
   String inString;
+
+  //Run until full packet is received 
   while (1) {
+    //Wait for serial connection
     while (!Serial.available());
+    //Read in the next char
     int inChar = Serial.read();
-    if (inChar == '\n') {
+
+    //Check it the end of packet is received
+    if (inChar == 10) {
+      //Ignore ASCII 10
+      continue;
+    }
+    if (inChar == 13) {
+      //Packet is done, break
       break;
     }
+
+    //Add char to string
     if (!isDigit(inChar)) {
       inString += inChar;
     }
     inString += (char)inChar;
   }
+
+  //Return char
   return inString.toInt();
 }
-
-
-
