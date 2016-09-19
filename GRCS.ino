@@ -2,10 +2,10 @@
  *  GRCSv2
  *  By: Joey Hines
  *  
- *  For use on an Arduino or compatiable device. Commands
- *  are recvived via Serial at a buad rate of 9600
+ *  For use on an Arduino or compatible device. Commands
+ *  are received via Serial at a buad-rate of 9600
  *  
- *  Commands have the format of first a symbol identifer
+ *  Commands have the format of first a symbol identifier
  *  and then a value. For example, if you want to turn 
  *  on the right motor at full power, you would send'
  *  the command "R100"
@@ -13,12 +13,12 @@
  *  Currently only works with the Servo class, more
  *  to be added in v3.
  *  
- *  Sensor support also comming, planned for v4.
+ *  Sensor support also coming, planned for v4.
  *  
  *  Change Log:
  *  -Motor code rewrite
  *    Adds modularity to code
- *    Allows for adding new addtinal motors qucikly
+ *    Allows for adding new additional motors quickly
  *    Use GRCSv2_Generator.exe to add new motors quickly
  *  
  */
@@ -30,7 +30,7 @@ struct Motor{
   int pin;
   int id;
   bool inverse;
-  //To be implemented later for diffrent kinds of motor control
+  //To be implemented later for different kinds of motor control
   //int motorType
   Servo servo;
 };
@@ -84,7 +84,7 @@ void loop() {
             motors[i].servo.write(angle);    
           }
           else {
-            //Detach motor to remove unwated movement
+            //Detach motor to remove unwanted movement
             motors[i].servo.detach();    
           }      
         }
