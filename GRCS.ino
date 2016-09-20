@@ -1,25 +1,6 @@
 /*
  *  GRCSv4
  *  By: Joey Hines (joey.ahines@gmail.com)
- *  
- *  For use on an Arduino or compatible device. Commands
- *  are recvived via Serial at a buad rate of 9600
- *
- *  Commands have the format of first a ASCII charcter 
- *  identifier and then a value. For example, 
- *  if you want to turn on a device called right motor at full 
- *  forward, you would send the command "R200". 
- *  
- *  Compatible with GRCv2+
- *  
- *  The following devices are supported:
- *  -Adafruit Motor Controller Sheild
- *  -Servos
- *  -Relays
- *  -PWM devices (ie Motor Controllers)
- *  
- *
- *  Sensor support postponed to v5
  *
  *  Change Log:
  *  +New devices added
@@ -27,11 +8,11 @@
  *   -Relays
  *   -PWM Motor Controller
  *   -Any PWM controlled device
- *  +motor structure renamed to device and new elements
- *  added
- *    -Since more than motors are not supported, the 
- *      rename was done to avoid confusion
- *    -New elements added for new devices
+ *  +motor structure renamed to device and new elements added
+ *    -Since more than motors are not supported, the rename was done to avoid 
+ *	    confusion
+ *    -Value pointer added for dynamic array for storing device specific values
+ *	  -numberOfDeviceValues also added to keep track of this array's size
  *  +Switch cases added for device specific code
  * 
  */

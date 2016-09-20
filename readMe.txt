@@ -1,7 +1,7 @@
 Generic Robot Control System
 
-For use on an arduino or compatible device. The goal of GRCS is to quickly 
-program arduino powered robots and other remote controlled devices.
+For use on an Arduino or compatible device. The goal of GRCS is to quickly 
+program Arduino powered robots and other remote controlled devices.
 
 The robot receives an array from a controller controller (GRC is provided
 for free on my GitHub page). The array includes device data such as device
@@ -19,11 +19,11 @@ right motor at full forward, you would send the command "R200".
 
 Data stored in the deviceArray:
 Modifiable
--GRCS id
--Pin Number
--Should motor be inversed
--number of device specific values
--Array of extra values 
+-char: GRCS id
+-int: Pin Number
+-int: Should motor be inversed
+-int: number of device specific values
+-int poniter: Array of extra values 
 Objects:
 -Adafuit motor object
 -Servo object
