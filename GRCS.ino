@@ -139,7 +139,7 @@ void writeToMotor(Device device, int value) {
   //Converts the GRCS value to the device specific value
   switch(device.deviceType) {
       case 0: //Case for Servo
-        deviceValue = value * 0.9;
+        deviceValue = (value * ((device.values[0] - device.values[0])/200)) + device.values[0];
           if (value != 100) {
             //Attach the motor
             device.servo.attach(device.pin);
