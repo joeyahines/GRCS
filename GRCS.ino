@@ -107,7 +107,7 @@ void loop() {
           int value = getSerialData();
           //Echo it to serial for debugging
           //Serial.println(value);
-          writeToMotor(deviceArray[i], value);
+          writeToDevice(deviceArray[i], value);
         }
       }
     }
@@ -121,14 +121,14 @@ void loop() {
   }
 }
 
-/* void writeToMotor(Motor motor, int value)
+/* void writeToDevice(Motor motor, int value)
  *  Takes value from -100 to 100 and writes and converts
  *  it to an angle from 0 to 180. Then it writes the
  *  angle to the servo
  */
 
 
-void writeToMotor(Device device, int value) {
+void writeToDevice( device, int value) {
   //Inverse value if the motor is inversed
   if (device.inverse) {
     value = -(value-100)+100;
@@ -139,6 +139,7 @@ void writeToMotor(Device device, int value) {
   //Converts the GRCS value to the device specific value
   switch(device.deviceType) {
       case 0: //Case for Servo
+      //Convert to servo angle depending on device limits 
         deviceValue = (value * ((device.values[0] - device.values[0])/200)) + device.values[0];
           if (value != 100) {
             //Attach the motor
