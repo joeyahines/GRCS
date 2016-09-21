@@ -11,8 +11,8 @@ struct Device{
   int pin;
   //Stores if the motor needs to be reversed, 1 for yes 0 for no
   bool inverse;
-  //To be implemented later for different kinds of motor control
-  int deviceType;
+  //Stores type of device
+  int type;
   //Adafruit motor controller sheild motor object
   Adafruit_DCMotor *motor;
   //Servo object

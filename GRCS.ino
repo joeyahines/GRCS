@@ -1,20 +1,15 @@
 /*
- *  GRCSv4
+ *  GRCSv5
  *  By: Joey Hines (joey.ahines@gmail.com)
  *
  *  Change Log:
- *  +New devices added
- *   -Adafruit Motor Controller Shield
- *   -Relays
- *   -PWM Motor Controller
- *   -Any PWM controlled device
- *  +motor structure renamed to device and new elements added
- *    -Since more than motors are not supported, the rename was done to avoid 
- *	    confusion
- *    -Value pointer added for dynamic array for storing device specific values
- *	  -numberOfDeviceValues also added to keep track of this array's size
- *  +Switch cases added for device specific code
- * 
+ *  +Added sensor support
+ *    -Currently supported senors:
+ *    
+ *    -getSensorValue(Device) function added to get sensor data
+ *    
+ *  +Added back communication to the controller
+ *    -This is implmented in sendToController(value)
  */
 
 #include <Servo.h>
@@ -84,6 +79,10 @@ void loop() {
       for (int i = 0; i < numberOfDevices; i++) {
         //If the id matches one of the motors
         if (deviceArray[i].id == id) {
+          //If device type is a sensor
+          if (deviceArray[i].type == 4) {
+            sendDataToController(getSensorValue(deviceArray[i]))
+          }
           //Get the value to write to the motor
           int value = getSerialData();
           //Echo it to serial for debugging
@@ -109,7 +108,7 @@ void loop() {
  */
 
 
-void writeToDevice( device, int value) {
+void writeToDevice(device, int value) {
   //Inverse value if the motor is inversed
   if (device.inverse) {
     value = -(value-100)+100;
@@ -118,7 +117,7 @@ void writeToDevice( device, int value) {
   int deviceValue;
   
   //Converts the GRCS value to the device specific value
-  switch(device.deviceType) {
+  switch(device.type) {
       case 0: //Case for Servo
       //Convert to servo angle depending on device limits 
         deviceValue = (value * ((device.values[0] - device.values[0])/200)) + device.values[0];
@@ -186,7 +185,7 @@ void writeToDevice( device, int value) {
         else {
           //Stop Motor
           analogWrite(device.pin, 0);
-        }     
+        }       
    }
 }
 
@@ -227,9 +226,9 @@ bool setupDeviceArray() {
     Serial.print("Inverse: ");
     Serial.println(deviceArray[i].inverse);
     
-    deviceArray[i].deviceType = getSerialData();
+    deviceArray[i].type = getSerialData();
     Serial.print("Device Type: ");
-    Serial.println(deviceArray[i].deviceType);
+    Serial.println(deviceArray[i].type);
 
     deviceArray[i].numberOfDeviceValues = getSerialData();
     Serial.print("Number Of Device Values:");
@@ -249,7 +248,7 @@ bool setupDeviceArray() {
     }
     
     //Switch for individual device setup, more to be added
-    switch(deviceArray[i].deviceType) {
+    switch(deviceArray[i].type) {
       case 0:
         break;
       case 1: //Case for device controller shield
@@ -272,7 +271,7 @@ bool setupDeviceArray() {
         break;
       default:
         Serial.println("Unknown type, assuming PWM servo."); 
-        deviceArray[i].deviceType = 0;
+        deviceArray[i].type = 0;
     }
   
   }
@@ -320,3 +319,25 @@ int getSerialData() {
   //Return char
   return inString.toInt();
 }
+
+/* int getSensorValues(Device device)
+ *  Gets a values from a certain sensor and returns it as a int
+ */
+int getSensorValues(Device device) {
+  //For testing
+  return 186;
+  /* Code to be added as sensors worked out
+   * Switch(device.values[0]) {
+   * 
+   * }
+   */
+}
+/* void sendDataToController(int data)
+ *  Sends data over serial in the right format to the controller
+ */
+void sendDataToController (int data) {
+  Serial.println('*');
+  Serial.println(deviceArray[i].id);
+  Serial.println(data);
+}
+
