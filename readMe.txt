@@ -3,7 +3,7 @@ Generic Robot Control System Version 4
 For use on an Arduino or compatible device. The goal of GRCS is to quickly 
 program Arduino powered robots and other remote controlled devices.
 
-The robot receives an array from a controller (GRC is provided with the 
+The robot receives an array from a controller (GRC is provided with this
 project). The array includes device data such as device type, pin, GRCS control
 id, etc. 
 
