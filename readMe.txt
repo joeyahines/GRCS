@@ -1,4 +1,4 @@
-Generic Robot Control System
+Generic Robot Control System Version 4
 
 For use on an Arduino or compatible device. The goal of GRCS is to quickly 
 program Arduino powered robots and other remote controlled devices.
