@@ -13,9 +13,9 @@ To program the robot, send $ over serial. Then send the number of devices
 followed by the individual device info.
 
 Commands have the format of first a ASCII character  identifier and then a 
-value. The values is from 0 to 200. Where 100 is 0, 200 is full speed forward 
-and 0 is full speed reverse For example, if you want to turn on a device called
-right motor at full forward, you would send the command "R200". 
+value. The values is from 0 to 200. Where 100 is 0% power, 200 is full speed 
+forward and 0 is full speed reverse For example, if you want to turn on a 
+device called right motor at full forward, you would send the command "R200". 
 
 Data stored in the deviceArray:
 Modifiable

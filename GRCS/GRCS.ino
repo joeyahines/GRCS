@@ -109,7 +109,7 @@ void loop() {
  */
 
 
-void writeToDevice( device, int value) {
+void writeToDevice(Device device, int value) {
   //Inverse value if the motor is inversed
   if (device.inverse) {
     value = -(value-100)+100;
@@ -121,7 +121,7 @@ void writeToDevice( device, int value) {
   switch(device.deviceType) {
       case 0: //Case for Servo
       //Convert to servo angle depending on device limits 
-        deviceValue = (value * ((device.values[0] - device.values[0])/200)) + device.values[0];
+        deviceValue = (value * ((device.value[0] - device.value[0])/200)) + device.value[0];
           if (value != 100) {
             //Attach the motor
             device.servo.attach(device.pin);
@@ -232,12 +232,12 @@ bool setupDeviceArray() {
     Serial.println(deviceArray[i].deviceType);
 
     deviceArray[i].numberOfDeviceValues = getSerialData();
-    Serial.print("Number Of Device Values:");
+    Serial.print("Number Of Device Values: ");
     Serial.println(deviceArray[i].numberOfDeviceValues);   
 
     //If the device needs more values
     if (deviceArray[i].numberOfDeviceValues != 0) {
-      //Create a array to store them in
+      //Create a array to store them inRR
       deviceArray[i].value = new int[deviceArray[i].numberOfDeviceValues];
 
       //Fill the array
