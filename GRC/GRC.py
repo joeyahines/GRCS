@@ -261,7 +261,18 @@ while done==False:
 					s.sendto(device.id + '\n', robot)
 					s.sendto("100" + '\n', robot)
 					textPrint.prin(screen,device.id + "{}".format(100) )
-	
+		elif (device.controlType == "0") :
+			pressed = joystick.get_button(device.controlNumber) 
+			#If button if pressed
+			if pressed: 
+				#Send 200 to the robot
+				s.sendto(device.id + '\n', robot)
+				s.sendto('200' + '\n', robot)
+			else:
+				#Send 100 to the robot
+				s.sendto(device.id + '\n', robot)
+				s.sendto('100' + '\n', robot
+				
 	#Update the window
 	pygame.display.flip()
 	
