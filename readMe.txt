@@ -17,6 +17,9 @@ value. The values is from 0 to 200. Where 100 is 0% power, 200 is full speed
 forward and 0 is full speed reverse For example, if you want to turn on a 
 device called right motor at full forward, you would send the command "R200". 
 
+GRCS_Comms can be used on a bridge device (such as a ESP8266) to send commands
+wirelessly. 
+
 Data stored in the deviceArray:
 Modifiable
 -char: GRCS id
@@ -28,3 +31,14 @@ Objects:
 -Adafuit motor object
 -Servo object
 
+Near Goals
+-Add sensor support/back communication to controller
+-Split devices into individual objects with a abstract class parent that
+ defines all the functions. This is to replace the switch statements and
+ modularity
+-Allow for wireless reprogramming of the Arduino, so controller has full
+ control and can define devices at runtime and at the controller level.
+ This also means that not all code has to be included for certain robots
+
+Far Off Goals
+-Add cross platform support (RasPi, Arduino, Windows IOT, others)

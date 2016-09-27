@@ -24,7 +24,7 @@ WHITE    = ( 255, 255, 255)
 #Default robot ip
 robot = ("192.168.4.1", 80);
 
-#Define list fro storing the deviceArray
+#Define list for storing the deviceArray
 deviceArray = []
 
 #Class for writing text to the screen
@@ -276,7 +276,7 @@ while done==False:
 	#Update the window
 	pygame.display.flip()
 	
-	# Limit to 20 frames per second
+	# Limit to 40 frames per second
 	clock.tick(40)
     
 #Send a stop to all devices
