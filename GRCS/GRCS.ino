@@ -121,7 +121,7 @@ void writeToDevice(Device device, int value) {
   switch(device.deviceType) {
       case 0: //Case for Servo
       //Convert to servo angle depending on device limits 
-        deviceValue = (value * ((device.value[0] - device.value[0])/200)) + device.value[0];
+        deviceValue = (value * ((device.value[1] - device.value[0])/200.0)) + device.value[0];
           if (value != 100) {
             //Attach the motor
             device.servo.attach(device.pin);
@@ -188,6 +188,8 @@ void writeToDevice(Device device, int value) {
           analogWrite(device.pin, 0);
         }     
    }
+
+   Serial.println(deviceValue);
 }
 
 /* bool setupDeviceArray()
@@ -281,7 +283,7 @@ bool setupDeviceArray() {
 
   //Will be used for checking impartial setups in future 
   //versions
-
+  
   return true;
 }
 

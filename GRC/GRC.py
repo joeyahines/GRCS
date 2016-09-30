@@ -63,7 +63,7 @@ class Device:
 		self.deviceValues = [];
 		
 	def toFile(self):
-		string = self.id + "\n" + self.pin + "\n" + self.controlType + "\n" + self.inverse + "\n" + self.deviceType + "\n" + self.controlType + "\n" + self.controlNumber + "\n" + str(self.numberOfDeviceValues) + "\n"
+		string = self.id + "\n" + self.pin + "\n" + self.inverse  + "\n" + self.deviceType + "\n" + self.controlType + "\n" + self.controlNumber + "\n" + str(self.numberOfDeviceValues) + "\n"
 		
 		if (self.numberOfDeviceValues != 0) :
 			for x in range(0, self.numberOfDeviceValues) :
@@ -271,7 +271,7 @@ while done==False:
 			else:
 				#Send 100 to the robot
 				s.sendto(device.id + '\n', robot)
-				s.sendto('100' + '\n', robot
+				s.sendto('100' + '\n', robot)
 				
 	#Update the window
 	pygame.display.flip()
