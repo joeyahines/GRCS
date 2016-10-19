@@ -1,5 +1,5 @@
 """
-Generic Robot Controller v1.2
+Generic Robot Controller v2.0
 For use with GRCS v4+
 
 This program supports GRCSv4+ standards of devices
